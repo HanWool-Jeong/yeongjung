@@ -48,9 +48,6 @@ export async function get_latest_msg(room, name, limit)
 
 export async function insert_msg(room, name, content, isImage)
 {
-    const re = /'/g;
-    content = content.replace(re, '\\\'');
-
     let query_statement =
     `
         INSERT INTO ${db_config.table}
@@ -69,6 +66,33 @@ export async function get_time_msg(room, name, start, end)
         WHERE name='${name}' AND room='${room}' AND
         DATE_FORMAT(time, '%Y%m%d%H%i')
         BETWEEN ${start} AND ${end}
+    `;
+
+    return await query(query_statement);
+}
+
+export async function get_frequency(room, name, target_word)
+{
+    let query_statement =
+    `
+        SELECT COUNT(*) as count FROM ${db_config.table}
+        WHERE content LIKE '%${target_word}%'
+        AND
+        room='${room}' AND name='${name}';
+    `;
+
+    return await query(query_statement);
+}
+
+export async function get_frequency_rank(room, target_word)
+{
+    let query_statement =
+    `
+        SELECT name, COUNT(*) as count FROM chats
+        WHERE content LIKE '%${target_word}%'
+        AND room='${room}'
+        GROUP BY name
+        ORDER BY count DESC;
     `;
 
     return await query(query_statement);

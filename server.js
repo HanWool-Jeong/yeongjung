@@ -3,7 +3,7 @@ import 'express-async-errors';
 import isNaturalNumber from 'is-natural-number';
 import { exec } from 'child_process';
 
-import { get_latest_msg, get_time_msg, insert_msg } from './database.js';
+import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
 
 const app = express();
 
@@ -12,14 +12,8 @@ const ip = '221.167.5.173';
 const project_dir = '/home/hanwool/kakaotalk-bot';
 
 const default_latest_msg_limit = 3;
-const kakaotalk_window_id = '0x3400037';
 const pics_regex = /사진 [0-9]+장을 보냈습니다./;
-
-//const kakaotalk_capture_cmd = 'scrot -k --display :0 --file ~/kakaotalk-bot/img/image.png'
-//exec(kakaotalk_capture_cmd, async function(e)
-//{
-//    if (e) console.log(e);
-//});
+const kakaotalk_capture_cmd = 'scrot -k --display :0 --file ~/kakaotalk-bot/img/image.png'
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
@@ -35,7 +29,7 @@ app.post('/chat', async function(req, res, next)
         let img_name = `${Date.now()}.png`;
 
         // imagemagick앱을 이용해 카톡방 통째로 캡쳐
-        exec(`import -window ${kakaotalk_window_id} ${project_dir}/img/${img_name}`, async function(e)
+        exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
         {
             if (e) next(e);
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
@@ -43,7 +37,10 @@ app.post('/chat', async function(req, res, next)
     }
     else
     {
-        await insert_msg(room, name, content, 0); 
+        // 쿼리 고장나지 않게 작은 따옴표 제거
+        const re = /'/g;
+        const replaced = content.replace(re, '\\\'');
+        await insert_msg(room, name, replaced, 0); 
     }
         
     res.send({ msg: 'ok' });
@@ -96,7 +93,7 @@ app.post('/latest_msg', async function(req, res)
 
 app.post('/time_msg', async function(req, res)
 {
-    console.log(req.body);
+    //console.log(req.body);
     const { room, name } = req.body;
     let { start, end } = req.body;
 
@@ -105,13 +102,18 @@ app.post('/time_msg', async function(req, res)
         res.send({ msg: '!기간메세지: 대상이 없습니다'});
         return;
     }
+    if (!start) 
+    {
+        res.send({ msg: '!기간메세지: 기간을 입력하세요'});
+        return;
+    }
 
     if (!end) end = start;
 
     // 자연수 판별
     const start_int = parseInt(start);
     const end_int = parseInt(end);
-    if (!isNaturalNumber(start_int) || !isNaturalNumber(end_int))
+    if (!isNaturalNumber(start_int, {includeZero: true}) || !isNaturalNumber(end_int, {includeZero: true}))
     {
         res.send({ msg: '!기간메세지: 자연수 형식으로 입력하세요'});
         return;
@@ -125,7 +127,7 @@ app.post('/time_msg', async function(req, res)
 
     // 날짜 포맷은 항상 12자리 자연수이기 때문에 날짜 prefix 생성해서 달아준다
     const date = new Date();
-    let prefix;
+    let prefix = "";
     
     if (start.length === 2)
         prefix = `${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}${date.getHours()}`;
@@ -144,6 +146,42 @@ app.post('/time_msg', async function(req, res)
 
     let response_msg = `${name}의 기간메세지:\n`;
     result.forEach(element => { response_msg += `[ ${element.content} ]\n`; });
+    response_msg = response_msg.slice(0, -1);
+
+    res.send({ msg: response_msg });
+});
+
+app.post('/frequency', async function(req, res) 
+{
+    const { room, name, target_word } = req.body;
+
+    if (!name || !target_word)
+    {
+        res.send({ msg: '!빈도: 대상이 없습니다' });
+        return;
+    }
+
+    let result = await get_frequency(room, name, target_word);
+    result = result[0];
+    let response_msg = `${name}의 ${target_word} 언급빈도: ${result.count}회`;
+    res.send({ msg: response_msg });
+});
+
+app.post('/frequency_rank', async function(req, res)
+{
+    const { room, target_word } = req.body;
+
+    if (!target_word)
+    {
+        res.send({ msg: '!빈도순위: 대상이 없습니다' });
+        return;
+    }
+
+    let result = await get_frequency_rank(room, target_word);
+    result = result.slice();
+
+    let response_msg = `${target_word} 언급 순위:\n`;
+    result.forEach(element => { response_msg += `${element.name} ${element.count}회\n`; });
     response_msg = response_msg.slice(0, -1);
 
     res.send({ msg: response_msg });

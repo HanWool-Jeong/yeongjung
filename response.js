@@ -95,6 +95,31 @@ function onCommand(chat)
             chat.reply(result.msg);
         }).start();
     }
+    else if (chat.command === '빈도')
+    {
+        target_url = '/frequency';
+        json_data.room = chat.room;
+        json_data.name = chat.args[0];
+        json_data.target_word = chat.args[1];
+
+        make_thread(() => 
+        {
+            const result = send_post(json_data, target_url);
+            chat.reply(result.msg);
+        }).start();
+    }
+    else if (chat.command === '빈도순위')
+    {
+        target_url = '/frequency_rank';
+        json_data.room = chat.room;
+        json_data.target_word = chat.args[0];
+
+        make_thread(() => 
+        {
+            const result = send_post(json_data, target_url);
+            chat.reply(result.msg);
+        }).start();
+    }
 }
 
 let bot = BotManager.getCurrentBot();
