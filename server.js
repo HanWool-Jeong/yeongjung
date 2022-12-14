@@ -4,6 +4,7 @@ import isNaturalNumber from 'is-natural-number';
 import { exec } from 'child_process';
 
 import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
+import { SqlError } from 'mariadb';
 
 const app = express();
 
@@ -13,7 +14,13 @@ const project_dir = '/home/hanwool/kakaotalk-bot';
 
 const default_latest_msg_limit = 3;
 const pics_regex = /사진 [0-9]+장을 보냈습니다./;
-const kakaotalk_capture_cmd = 'scrot -k --display :0 --file ~/kakaotalk-bot/img/image.png'
+
+const command_prefix = '!';
+const command_ping = '핑';
+const command_latest_msg = '최근메세지';
+const command_time_msg = '기간메세지';
+const command_frequency = '빈도';
+const command_frequency_rank = '빈도순위';
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
@@ -28,10 +35,10 @@ app.post('/chat', async function(req, res, next)
     {
         let img_name = `${Date.now()}.png`;
 
-        // imagemagick앱을 이용해 카톡방 통째로 캡쳐
+        // scort을 이용해 카톡방 통째로 캡쳐
         exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
         {
-            if (e) next(e);
+            if (e) next(new URIError(e.message));
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
     }
@@ -54,15 +61,17 @@ app.post('/ping', function(req, res)
 });
 
 // 최근메세지 가져오기
-app.post('/latest_msg', async function(req, res)
+app.post('/latest_msg', async function(req, res, next)
 {
     //console.log(req.body);
+    let error = new Error(command_prefix + command_latest_msg + ": ");
     const { room, name } = req.body;
     let { limit } = req.body;
 
     if (!name)
     {
-        res.send({ msg: '!최근메세지: 대상이 없습니다'});
+        error.message += "대상이 없습니다";
+        next(error);
         return;
     }
 
@@ -76,7 +85,8 @@ app.post('/latest_msg', async function(req, res)
         limit = parseInt(limit);
         if (!isNaturalNumber(limit))
         {
-            res.send({ msg: '!최근메세지: 자연수를 입력하세요'});
+            error.message += "자연수를 입력하세요";
+            next(error);
             return;
         }
     }
@@ -91,20 +101,23 @@ app.post('/latest_msg', async function(req, res)
     res.send({ msg: response_msg });
 });
 
-app.post('/time_msg', async function(req, res)
+app.post('/time_msg', async function(req, res, next)
 {
     //console.log(req.body);
+    let error = new Error(command_prefix + command_time_msg + ": ");
     const { room, name } = req.body;
     let { start, end } = req.body;
 
     if (!name) 
     {
-        res.send({ msg: '!기간메세지: 대상이 없습니다'});
+        error.message += "대상이 없습니다";
+        next(error);
         return;
     }
     if (!start) 
     {
-        res.send({ msg: '!기간메세지: 기간을 입력하세요'});
+        error.message += "기간을 입력하세요";
+        next(error);
         return;
     }
 
@@ -115,13 +128,15 @@ app.post('/time_msg', async function(req, res)
     const end_int = parseInt(end);
     if (!isNaturalNumber(start_int, {includeZero: true}) || !isNaturalNumber(end_int, {includeZero: true}))
     {
-        res.send({ msg: '!기간메세지: 자연수 형식으로 입력하세요'});
+        error.message += "자연수 형식으로 입력하세요";
+        next(error);
         return;
     }
     // 다르게 입력했을 때
     if (start.length !== end.length)
     {
-        res.send({ msg: '!기간메세지: 시작과 끝을 똑같은 형식으로 입력하세요' });
+        error.message += "시작과 끝을 똑같은 형식으로 입력하세요";
+        next(error);
         return;
     }
 
@@ -151,13 +166,16 @@ app.post('/time_msg', async function(req, res)
     res.send({ msg: response_msg });
 });
 
-app.post('/frequency', async function(req, res) 
+app.post('/frequency', async function(req, res, next) 
 {
+    //console.log(req.body);
+    let error = new Error(command_prefix + command_frequency + ": ");
     const { room, name, target_word } = req.body;
 
     if (!name || !target_word)
     {
-        res.send({ msg: '!빈도: 대상이 없습니다' });
+        error.message += "대상이 없습니다";
+        next(error);
         return;
     }
 
@@ -167,13 +185,16 @@ app.post('/frequency', async function(req, res)
     res.send({ msg: response_msg });
 });
 
-app.post('/frequency_rank', async function(req, res)
+app.post('/frequency_rank', async function(req, res, next)
 {
+    //console.log(req.body);
+    let error = new Error(command_prefix + command_frequency_rank + ": ");
     const { room, target_word } = req.body;
 
     if (!target_word)
     {
-        res.send({ msg: '!빈도순위: 대상이 없습니다' });
+        error.message += "대상이 없습니다";
+        next(error);
         return;
     }
 
@@ -186,6 +207,23 @@ app.post('/frequency_rank', async function(req, res)
 
     res.send({ msg: response_msg });
 });
+
+// 예외처리
+app.use(function (error, req, res, next) {
+    if (error instanceof SqlError)
+    {
+        res.send({ msg: "데이터베이스 실패" });
+        next(error);
+    }
+    else if (error instanceof URIError) // 사진 저장 에러처리
+    {
+        next(error);
+    }
+    else
+    {
+        res.send({ msg: error.message });
+    }
+})
 
 app.listen(port, '0.0.0.0', function()
 {
