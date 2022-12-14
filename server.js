@@ -12,15 +12,9 @@ const port = 3000;
 const ip = '221.167.5.173';
 const project_dir = '/home/hanwool/kakaotalk-bot';
 
+const command_prefix = '!';
 const default_latest_msg_limit = 3;
 const pics_regex = /사진 [0-9]+장을 보냈습니다./;
-
-const command_prefix = '!';
-const command_ping = '핑';
-const command_latest_msg = '최근메세지';
-const command_time_msg = '기간메세지';
-const command_frequency = '빈도';
-const command_frequency_rank = '빈도순위';
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
@@ -54,13 +48,14 @@ app.post('/chat', async function(req, res, next)
 });
 
 // 봇과 서버사이의 rtt계산
+const command_ping = '핑';
 app.post('/ping', function(req, res)
 {
     //console.log(req.body);
     res.send({ msg: `퐁!`});
 });
 
-// 최근메세지 가져오기
+const command_latest_msg = '최근메세지';
 app.post('/latest_msg', async function(req, res, next)
 {
     //console.log(req.body);
@@ -101,6 +96,7 @@ app.post('/latest_msg', async function(req, res, next)
     res.send({ msg: response_msg });
 });
 
+const command_time_msg = '기간메세지';
 app.post('/time_msg', async function(req, res, next)
 {
     //console.log(req.body);
@@ -166,6 +162,7 @@ app.post('/time_msg', async function(req, res, next)
     res.send({ msg: response_msg });
 });
 
+const command_frequency = '빈도';
 app.post('/frequency', async function(req, res, next) 
 {
     //console.log(req.body);
@@ -185,6 +182,7 @@ app.post('/frequency', async function(req, res, next)
     res.send({ msg: response_msg });
 });
 
+const command_frequency_rank = '빈도순위';
 app.post('/frequency_rank', async function(req, res, next)
 {
     //console.log(req.body);
