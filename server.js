@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 
 import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
 import { SqlError } from 'mariadb';
-import { CommandError } from './error.js';
+import { CommandError, ImageSaveFailedError } from './error.js';
 
 const app = express();
 
@@ -37,7 +37,7 @@ app.post('/chat', async function(req, res, next)
         // scort을 이용해 카톡방 통째로 캡쳐
         exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
         {
-            if (e) next(e);
+            if (e) next(new ImageSaveFailedError(e.message));
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
     }
@@ -211,6 +211,13 @@ app.post('/frequency_rank', async function(req, res, next)
     res.send({ msg: response_msg });
 });
 
+const command_kimjisung_alcohol = "김지성주량";
+app.post('/kimjisung_alcohol', function (req, res) 
+{
+    const m = "김지성의 주량은 0.5병\n" + "(단, 강애리 합석시 +2병)";
+    res.send({ msg: m });
+});
+
 // 예외처리
 app.use(function (error, req, res, next) {
     if (error instanceof SqlError)
@@ -222,11 +229,16 @@ app.use(function (error, req, res, next) {
     {
         res.send({ msg: error.message });
     }
+    else if (error instanceof ImageSaveFailedError)
+    {
+        res.send({ msg: "이미지 저장 실패" });
+        next(error);
+    }
     else
     {
         next(error);
     }
-})
+});
 
 app.listen(port, '0.0.0.0', function()
 {

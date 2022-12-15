@@ -1,16 +1,17 @@
-export function CommandError(message)
+export class CommandError extends Error
 {
-    this.name = "CommandError";
-    this.message = message;
+    constructor(message)
+    {
+        super(message);
+        this.name = "CommandError";
+    }
 }
-CommandError.prototype = new Error();
-CommandError.prototype.constructor = CommandError;
 
-// 현재 사용안함
-export function ImageSaveFailedError(message)
+export class ImageSaveFailedError extends Error
 {
-    this.name = "ImageSaveFailedError";
-    this.message = message;
+    constructor(message)
+    {
+        super(message);
+        this.name = "ImageSaveFailedError";
+    }
 }
-ImageSaveFailedError.prototype = new Error();
-ImageSaveFailedError.prototype.constructor = ImageSaveFailedError;
