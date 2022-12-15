@@ -135,6 +135,16 @@ function onCommand(chat)
             chat.reply(result.msg);
         }).start();
     }
+    else if (chat.command === '이영민')
+    {
+        target_url = '/leeyoungmin';
+
+        make_thread(() => 
+        {
+            const result = send_post(json_data, target_url);
+            chat.reply(result.msg);
+        }).start();
+    }
 }
 
 let bot = BotManager.getCurrentBot();

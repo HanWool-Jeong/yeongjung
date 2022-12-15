@@ -218,6 +218,13 @@ app.post('/kimjisung_alcohol', function (req, res)
     res.send({ msg: m });
 });
 
+const command_leeyoungmin = "이영민";
+app.post('/leeyoungmin', function(req, res)
+{
+    const m = "지예문정현나~~~~~~~~~";
+    res.send({ msg: m });
+});
+
 // 예외처리
 const too_long_msg = /Data too long for column/;
 app.use(function (error, req, res, next) {
