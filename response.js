@@ -49,7 +49,12 @@ function onMessage(chat)
         content: chat.content,
     };
 
-    make_thread(() => { send_post(json_data, chat_url); }).start();
+    make_thread(() => 
+    {
+        const result = send_post(json_data, chat_url);
+        if (result.msg !== 'ok')
+            chat.reply(result.msg);
+    }).start();
 }
 
 function onCommand(chat)
@@ -113,6 +118,16 @@ function onCommand(chat)
         target_url = '/frequency_rank';
         json_data.room = chat.room;
         json_data.target_word = chat.args[0];
+
+        make_thread(() => 
+        {
+            const result = send_post(json_data, target_url);
+            chat.reply(result.msg);
+        }).start();
+    }
+    else if (chat.command === '김지성주량')
+    {
+        target_url = '/kimjisung_alcohol';
 
         make_thread(() => 
         {

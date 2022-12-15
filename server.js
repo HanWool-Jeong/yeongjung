@@ -219,11 +219,31 @@ app.post('/kimjisung_alcohol', function (req, res)
 });
 
 // 예외처리
+const too_long_msg = /Data too long for column/;
 app.use(function (error, req, res, next) {
     if (error instanceof SqlError)
     {
-        res.send({ msg: "데이터베이스 실패" });
-        next(error);
+        if (too_long_msg.test(error.message))
+        {
+            const { room, name } = req.body;
+            // 넣을 문장이 너무 길면 캡쳐한다
+            let img_name = `${Date.now()}.png`;
+            exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
+            {
+                if (e)
+                {
+                    res.send({ msg: "긴 문장 캡쳐 실패" });
+                    next(new ImageSaveFailedError("긴 문장 캡쳐 실패\n" + e.message));
+                }
+                else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
+            });
+            res.send({ msg: 'ok' });
+        }
+        else
+        {
+            res.send({ msg: "데이터베이스 실패" });
+            next(error);
+        }
     }
     else if (error instanceof CommandError)
     {
@@ -236,6 +256,7 @@ app.use(function (error, req, res, next) {
     }
     else
     {
+        res.send({ msg: "알 수 없는 오류"});
         next(error);
     }
 });
