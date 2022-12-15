@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 
 import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
 import { SqlError } from 'mariadb';
+import { CommandError } from './error.js';
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.post('/chat', async function(req, res, next)
         // scort을 이용해 카톡방 통째로 캡쳐
         exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
         {
-            if (e) next(new URIError(e.message));
+            if (e) next(e);
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
     }
@@ -63,7 +64,7 @@ const command_latest_msg = '최근메세지';
 app.post('/latest_msg', async function(req, res, next)
 {
     //console.log(req.body);
-    let error = new Error(command_prefix + command_latest_msg + ": ");
+    let error = new CommandError(command_prefix + command_latest_msg + ": ");
     const { room, name } = req.body;
     let { limit } = req.body;
 
@@ -104,7 +105,7 @@ const command_time_msg = '기간메세지';
 app.post('/time_msg', async function(req, res, next)
 {
     //console.log(req.body);
-    let error = new Error(command_prefix + command_time_msg + ": ");
+    let error = new CommandError(command_prefix + command_time_msg + ": ");
     const { room, name } = req.body;
     let { start, end } = req.body;
 
@@ -170,7 +171,7 @@ const command_frequency = '빈도';
 app.post('/frequency', async function(req, res, next) 
 {
     //console.log(req.body);
-    let error = new Error(command_prefix + command_frequency + ": ");
+    let error = new CommandError(command_prefix + command_frequency + ": ");
     const { room, name, target_word } = req.body;
 
     if (!name || !target_word)
@@ -190,7 +191,7 @@ const command_frequency_rank = '빈도순위';
 app.post('/frequency_rank', async function(req, res, next)
 {
     //console.log(req.body);
-    let error = new Error(command_prefix + command_frequency_rank + ": ");
+    let error = new CommandError(command_prefix + command_frequency_rank + ": ");
     const { room, target_word } = req.body;
 
     if (!target_word)
@@ -217,13 +218,13 @@ app.use(function (error, req, res, next) {
         res.send({ msg: "데이터베이스 실패" });
         next(error);
     }
-    else if (error instanceof URIError) // 사진 저장 에러처리
+    else if (error instanceof CommandError)
     {
-        next(error);
+        res.send({ msg: error.message });
     }
     else
     {
-        res.send({ msg: error.message });
+        next(error);
     }
 })
 
