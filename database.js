@@ -39,7 +39,7 @@ export async function get_latest_msg(room, name, limit)
             WHERE name='${name}' AND room='${room}'
             ORDER BY id DESC
             LIMIT ${limit}
-        ) as inline_view
+        ) AS inline_view
         ORDER BY id ASC;
     `;
 
@@ -75,10 +75,9 @@ export async function get_frequency(room, name, target_word)
 {
     let query_statement =
     `
-        SELECT COUNT(*) as count FROM ${db_config.table}
-        WHERE content LIKE '%${target_word}%'
-        AND
-        room='${room}' AND name='${name}';
+        SELECT COUNT(*) AS count FROM ${db_config.table}
+        WHERE room='${room}' AND name='${name}' AND
+        content LIKE '%${target_word}%';
     `;
 
     return await query(query_statement);
@@ -88,9 +87,9 @@ export async function get_frequency_rank(room, target_word)
 {
     let query_statement =
     `
-        SELECT name, COUNT(*) as count FROM chats
-        WHERE content LIKE '%${target_word}%'
-        AND room='${room}'
+        SELECT name, COUNT(*) AS count FROM ${db_config.table}
+        WHERE room='${room}' AND
+        content LIKE '%${target_word}%'
         GROUP BY name
         ORDER BY count DESC;
     `;

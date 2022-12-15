@@ -15,6 +15,7 @@ const project_dir = '/home/hanwool/kakaotalk-bot';
 const command_prefix = '!';
 const default_latest_msg_limit = 3;
 const pics_regex = /사진 [0-9]+장을 보냈습니다./;
+const sharp_search_regex = /샵검색 :/;
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
@@ -25,7 +26,10 @@ app.post('/chat', async function(req, res, next)
     //console.log(req.body);
     const { room, name, content } = req.body;
 
-    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.')
+    if (room === '배내골' && name === '정한울')
+        return;
+
+    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content))
     {
         let img_name = `${Date.now()}.png`;
 
