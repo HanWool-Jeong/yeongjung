@@ -52,8 +52,8 @@ function onMessage(chat)
     make_thread(() => 
     {
         const result = send_post(json_data, chat_url);
-        if (result.msg !== 'ok')
-            chat.reply(result.msg);
+        //if (result.msg !== 'ok')
+        //    chat.reply(result.msg);
     }).start();
 }
 

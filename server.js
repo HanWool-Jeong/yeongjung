@@ -27,8 +27,8 @@ app.post('/chat', async function(req, res, next)
     //console.log(req.body);
     const { room, name, content } = req.body;
 
-    if (room === '배내골' && name === '정한울')
-        return;
+    if (name === '정한울' && room !== '정한울')
+            return;
 
     if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content))
     {

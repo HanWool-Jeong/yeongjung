@@ -16,7 +16,8 @@ const pool = mariadb.createPool
     host: db_config.host,
     port: db_config.port,
     user: db_config.user,
-    password: db_config.password
+    password: db_config.password,
+    charset: 'utf8mb4'
 });
 
 async function query(query_statement)
