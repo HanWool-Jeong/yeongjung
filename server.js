@@ -224,7 +224,7 @@ app.post('/kimjisung_alcohol', function (req, res)
 const command_leeyoungmin = "이영민";
 app.post('/leeyoungmin', function(req, res)
 {
-    const m = "지예문정현나~~~~~~~~~";
+    const m = "지예문정현나~↗";
     res.send({ msg: m });
 });
 
