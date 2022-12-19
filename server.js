@@ -32,6 +32,9 @@ app.post('/chat', async function(req, res, next)
 
     if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content))
     {
+        if (room !== '배내골')
+            return;
+
         let img_name = `${Date.now()}.png`;
 
         // scort을 이용해 카톡방 통째로 캡쳐
