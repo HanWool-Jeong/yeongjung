@@ -17,6 +17,17 @@ const command_prefix = '!';
 const default_latest_msg_limit = 3;
 const pics_regex = /사진 [0-9]+장을 보냈습니다./;
 const sharp_search_regex = /샵검색 :/;
+const pc_emo_reply = /이모티콘/;
+const ph_emo_reply = /(이모티콘)/;
+
+const kakaotalk_window_W = 475;
+const kakaotalk_window_H = 800;
+const kakaotalk_window_X = 1920 - kakaotalk_window_W;
+const kakaotalk_window_Y = 1;
+//const kakaotalk_capture_cmd1 = `scrot --display :0 -a ${kakaotalk_window_X},${kakaotalk_window_Y},${kakaotalk_window_W},${kakaotalk_window_H} --file ${project_dir}/img/${img_name}`;
+//const kakaotalk_capture_cmd2 = `scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`
+
+const whitelist = [ '정한울', '황현성' ];
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
@@ -27,13 +38,13 @@ app.post('/chat', async function(req, res, next)
     //console.log(req.body);
     const { room, name, content } = req.body;
 
-    if (name === '정한울' && room !== '정한울')
-            return;
-
-    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content))
+    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content))
     {
         if (room !== '배내골')
+        {
+            await insert_msg(room, name, content, 0); 
             return;
+        }
 
         let img_name = `${Date.now()}.png`;
 
@@ -70,6 +81,9 @@ app.post('/latest_msg', async function(req, res, next)
     let error = new CommandError(command_prefix + command_latest_msg + ": ");
     const { room, name } = req.body;
     let { limit } = req.body;
+
+    if (whitelist.includes(name))
+        return;
 
     if (!name)
     {
@@ -111,6 +125,9 @@ app.post('/time_msg', async function(req, res, next)
     let error = new CommandError(command_prefix + command_time_msg + ": ");
     const { room, name } = req.body;
     let { start, end } = req.body;
+
+    if (whitelist.includes(name))
+        return;
 
     if (!name) 
     {
