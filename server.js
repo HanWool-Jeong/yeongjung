@@ -6,12 +6,9 @@ import { exec } from 'child_process';
 import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
 import { SqlError } from 'mariadb';
 import { CommandError, ImageSaveFailedError } from './error.js';
+import { port, ip, project_dir } from './global_variables.js';
 
 const app = express();
-
-const port = 3000;
-const ip = '221.167.5.173';
-const project_dir = '/home/hanwool/kakaotalk-bot';
 
 const command_prefix = '!';
 const default_latest_msg_limit = 3;
