@@ -30,15 +30,12 @@ app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
 
 // 메세지 & 이미지 db에 저장
-app.post('/chat', async function(req, res, next)
-{
+app.post('/chat', async function(req, res, next) {
     //console.log(req.body);
     const { room, name, content } = req.body;
 
-    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content))
-    {
-        if (room !== '배내골')
-        {
+    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content)) {
+        if (room !== '배내골') {
             await insert_msg(room, name, content, 0); 
             return;
         }
@@ -46,14 +43,12 @@ app.post('/chat', async function(req, res, next)
         let img_name = `${Date.now()}.png`;
 
         // scort을 이용해 카톡방 통째로 캡쳐
-        exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
-        {
+        exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e) {
             if (e) next(new ImageSaveFailedError(e.message));
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
     }
-    else
-    {
+    else {
         // 쿼리 고장나지 않게 작은 따옴표 제거
         const re = /'/g;
         const replaced = content.replace(re, '\\\'');
@@ -65,15 +60,13 @@ app.post('/chat', async function(req, res, next)
 
 // 봇과 서버사이의 rtt계산
 const command_ping = '핑';
-app.post('/ping', function(req, res)
-{
+app.post('/ping', function(req, res) {
     //console.log(req.body);
     res.send({ msg: `퐁!`});
 });
 
 const command_latest_msg = '최근메세지';
-app.post('/latest_msg', async function(req, res, next)
-{
+app.post('/latest_msg', async function(req, res, next) {
     //console.log(req.body);
     let error = new CommandError(command_prefix + command_latest_msg + ": ");
     const { room, name } = req.body;
@@ -82,23 +75,19 @@ app.post('/latest_msg', async function(req, res, next)
     if (whitelist.includes(name))
         return;
 
-    if (!name)
-    {
+    if (!name) {
         error.message += "대상이 없습니다";
         next(error);
         return;
     }
 
-    if (!limit)
-    {
+    if (!limit) {
         limit = default_latest_msg_limit;
     }
-    else
-    {
+    else {
         // 자연수 판별
         limit = parseInt(limit);
-        if (!isNaturalNumber(limit))
-        {
+        if (!isNaturalNumber(limit)) {
             error.message += "자연수를 입력하세요";
             next(error);
             return;
@@ -116,8 +105,7 @@ app.post('/latest_msg', async function(req, res, next)
 });
 
 const command_time_msg = '기간메세지';
-app.post('/time_msg', async function(req, res, next)
-{
+app.post('/time_msg', async function(req, res, next) {
     //console.log(req.body);
     let error = new CommandError(command_prefix + command_time_msg + ": ");
     const { room, name } = req.body;
@@ -126,14 +114,12 @@ app.post('/time_msg', async function(req, res, next)
     if (whitelist.includes(name))
         return;
 
-    if (!name) 
-    {
+    if (!name)  {
         error.message += "대상이 없습니다";
         next(error);
         return;
     }
-    if (!start) 
-    {
+    if (!start) {
         error.message += "기간을 입력하세요";
         next(error);
         return;
@@ -144,15 +130,13 @@ app.post('/time_msg', async function(req, res, next)
     // 자연수 판별
     const start_int = parseInt(start);
     const end_int = parseInt(end);
-    if (!isNaturalNumber(start_int, {includeZero: true}) || !isNaturalNumber(end_int, {includeZero: true}))
-    {
+    if (!isNaturalNumber(start_int, {includeZero: true}) || !isNaturalNumber(end_int, {includeZero: true})) {
         error.message += "자연수 형식으로 입력하세요";
         next(error);
         return;
     }
     // 다르게 입력했을 때
-    if (start.length !== end.length)
-    {
+    if (start.length !== end.length) {
         error.message += "시작과 끝을 똑같은 형식으로 입력하세요";
         next(error);
         return;
@@ -185,14 +169,12 @@ app.post('/time_msg', async function(req, res, next)
 });
 
 const command_frequency = '빈도';
-app.post('/frequency', async function(req, res, next) 
-{
+app.post('/frequency', async function(req, res, next) {
     //console.log(req.body);
     let error = new CommandError(command_prefix + command_frequency + ": ");
     const { room, name, target_word } = req.body;
 
-    if (!name || !target_word)
-    {
+    if (!name || !target_word) {
         error.message += "대상이 없습니다";
         next(error);
         return;
@@ -205,14 +187,12 @@ app.post('/frequency', async function(req, res, next)
 });
 
 const command_frequency_rank = '빈도순위';
-app.post('/frequency_rank', async function(req, res, next)
-{
+app.post('/frequency_rank', async function(req, res, next) {
     //console.log(req.body);
     let error = new CommandError(command_prefix + command_frequency_rank + ": ");
     const { room, target_word } = req.body;
 
-    if (!target_word)
-    {
+    if (!target_word) {
         error.message += "대상이 없습니다";
         next(error);
         return;
@@ -229,15 +209,13 @@ app.post('/frequency_rank', async function(req, res, next)
 });
 
 const command_kimjisung_alcohol = "김지성주량";
-app.post('/kimjisung_alcohol', function (req, res) 
-{
+app.post('/kimjisung_alcohol', function (req, res) {
     const m = "김지성의 주량은 0.5병\n" + "(단, 강애리 합석시 +2병)";
     res.send({ msg: m });
 });
 
 const command_leeyoungmin = "이영민";
-app.post('/leeyoungmin', function(req, res)
-{
+app.post('/leeyoungmin', function(req, res) {
     const m = "지예문정현나~↗";
     res.send({ msg: m });
 });
@@ -245,17 +223,13 @@ app.post('/leeyoungmin', function(req, res)
 // 예외처리
 const too_long_msg = /Data too long for column/;
 app.use(function (error, req, res, next) {
-    if (error instanceof SqlError)
-    {
-        if (too_long_msg.test(error.message))
-        {
+    if (error instanceof SqlError) {
+        if (too_long_msg.test(error.message)) {
             const { room, name } = req.body;
             // 넣을 문장이 너무 길면 캡쳐한다
             let img_name = `${Date.now()}.png`;
-            exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e)
-            {
-                if (e)
-                {
+            exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e) {
+                if (e) {
                     res.send({ msg: "긴 문장 캡쳐 실패" });
                     next(new ImageSaveFailedError("긴 문장 캡쳐 실패\n" + e.message));
                 }
@@ -263,29 +237,24 @@ app.use(function (error, req, res, next) {
             });
             res.send({ msg: 'ok' });
         }
-        else
-        {
+        else {
             res.send({ msg: "데이터베이스 실패" });
             next(error);
         }
     }
-    else if (error instanceof CommandError)
-    {
+    else if (error instanceof CommandError) {
         res.send({ msg: error.message });
     }
-    else if (error instanceof ImageSaveFailedError)
-    {
+    else if (error instanceof ImageSaveFailedError) {
         res.send({ msg: "이미지 저장 실패" });
         next(error);
     }
-    else
-    {
+    else {
         res.send({ msg: "알 수 없는 오류"});
         next(error);
     }
 });
 
-app.listen(port, '0.0.0.0', function()
-{
+app.listen(port, '0.0.0.0', function() {
     console.log(`${ip}:${port}`, '서버 가동중..');
 });
