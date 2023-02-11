@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "kakaotalk_bot_db",
+            "database": "kakaotalk_bot_db",
+            "username": "kakaotalk_bot",
+            "password": "2341"
+        }
+    ]
+}

@@ -3,7 +3,7 @@ import mariadb from 'mariadb';
 const db_config = {
     host: 'localhost',
     port: 3306,
-    user: 'kakaotalk-bot',
+    user: 'kakaotalk_bot',
     password: '2341',
     db: 'kakaotalk_bot_db',
     table: 'chats'

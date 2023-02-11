@@ -23,6 +23,7 @@ const kakaotalk_window_X = 1920 - kakaotalk_window_W;
 const kakaotalk_window_Y = 1;
 //const kakaotalk_capture_cmd1 = `scrot --display :0 -a ${kakaotalk_window_X},${kakaotalk_window_Y},${kakaotalk_window_W},${kakaotalk_window_H} --file ${project_dir}/img/${img_name}`;
 //const kakaotalk_capture_cmd2 = `scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`
+//const kakaotalk_capture_cmd = `scrot --file ${project_dir}/img/${img_name} -u`;
 
 const whitelist = [ '정한울', '황현성' ];
 
@@ -41,9 +42,10 @@ app.post('/chat', async function(req, res, next) {
         }
 
         let img_name = `${Date.now()}.png`;
+        const kakaotalk_capture_cmd = `scrot --file ${project_dir}/img/${img_name} -u`;
 
         // scort을 이용해 카톡방 통째로 캡쳐
-        exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e) {
+        exec(kakaotalk_capture_cmd, async function(e) {
             if (e) next(new ImageSaveFailedError(e.message));
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
@@ -219,6 +221,11 @@ app.post('/leeyoungmin', function(req, res) {
     const m = "지예문정현나~↗";
     res.send({ msg: m });
 });
+
+//const command_talking = "영중아";
+//app.post('/talking', function(req, res) {
+//    const m 
+//});
 
 // 예외처리
 const too_long_msg = /Data too long for column/;
