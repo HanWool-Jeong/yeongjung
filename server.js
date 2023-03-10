@@ -7,6 +7,7 @@ import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert
 import { SqlError } from 'mariadb';
 import { CommandError, ImageSaveFailedError } from './error.js';
 import { port, ip, project_dir } from './global_variables.js';
+import { talking } from './chatgpt.js';
 
 const app = express();
 
@@ -224,6 +225,16 @@ const command_leeyoungmin = "이영민";
 app.post('/leeyoungmin', function(req, res) {
     const m = "지예문정현나~↗";
     res.send({ msg: m });
+});
+
+const command_talking = "영중아";
+app.post('/talking', async function(req, res) {
+    const { prompt } = req.body;
+
+    let ai_reply = await talking(prompt);
+    ai_reply = ai_reply.trim();
+
+    res.send({ msg: ai_reply });
 });
 
 // 예외처리
