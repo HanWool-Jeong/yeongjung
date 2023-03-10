@@ -17,10 +17,10 @@ const sharp_search_regex = /샵검색 :/;
 const pc_emo_reply = /이모티콘/;
 const ph_emo_reply = /(이모티콘)/;
 
-const kakaotalk_window_W = 475;
-const kakaotalk_window_H = 800;
-const kakaotalk_window_X = 1920 - kakaotalk_window_W;
-const kakaotalk_window_Y = 1;
+//const kakaotalk_window_W = 475;
+//const kakaotalk_window_H = 800;
+//const kakaotalk_window_X = 1920 - kakaotalk_window_W;
+//const kakaotalk_window_Y = 1;
 //const kakaotalk_capture_cmd1 = `scrot --display :0 -a ${kakaotalk_window_X},${kakaotalk_window_Y},${kakaotalk_window_W},${kakaotalk_window_H} --file ${project_dir}/img/${img_name}`;
 //const kakaotalk_capture_cmd2 = `scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`
 //const kakaotalk_capture_cmd = `scrot --file ${project_dir}/img/${img_name} -u`;
@@ -36,17 +36,21 @@ app.post('/chat', async function(req, res, next) {
     const { room, name, content } = req.body;
 
     if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content)) {
-        if (room !== '배내골') {
+        if (room !== '배내골' && room !== '정한울') {
             await insert_msg(room, name, content, 0); 
+            res.send({ msg: 'ok' });
             return;
         }
 
         let img_name = `${Date.now()}.png`;
-        const kakaotalk_capture_cmd = `scrot --file ${project_dir}/img/${img_name} -u`;
+        const kakaotalk_capture_cmd = `sleep 2 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
 
         // scort을 이용해 카톡방 통째로 캡쳐
         exec(kakaotalk_capture_cmd, async function(e) {
-            if (e) next(new ImageSaveFailedError(e.message));
+            if (e) {
+                next(new ImageSaveFailedError(e.message));
+                return;
+            }
             else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
         });
     }
@@ -222,26 +226,25 @@ app.post('/leeyoungmin', function(req, res) {
     res.send({ msg: m });
 });
 
-//const command_talking = "영중아";
-//app.post('/talking', function(req, res) {
-//    const m 
-//});
-
 // 예외처리
 const too_long_msg = /Data too long for column/;
 app.use(function (error, req, res, next) {
     if (error instanceof SqlError) {
         if (too_long_msg.test(error.message)) {
             const { room, name } = req.body;
+
             // 넣을 문장이 너무 길면 캡쳐한다
             let img_name = `${Date.now()}.png`;
-            exec(`scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`, async function(e) {
+            const kakaotalk_capture_cmd = `sleep 2 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
+
+            exec(kakaotalk_capture_cmd, async function(e) {
                 if (e) {
                     res.send({ msg: "긴 문장 캡쳐 실패" });
                     next(new ImageSaveFailedError("긴 문장 캡쳐 실패\n" + e.message));
                 }
                 else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
             });
+
             res.send({ msg: 'ok' });
         }
         else {
@@ -253,6 +256,7 @@ app.use(function (error, req, res, next) {
         res.send({ msg: error.message });
     }
     else if (error instanceof ImageSaveFailedError) {
+		console.log(error.message);
         res.send({ msg: "이미지 저장 실패" });
         next(error);
     }
