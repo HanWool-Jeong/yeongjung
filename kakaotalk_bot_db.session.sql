@@ -1,1 +1,0 @@
-SELECT * FROM ( SELECT * FROM chats ORDER BY id DESC LIMIT 10) AS inline_view ORDER BY id ASC;
