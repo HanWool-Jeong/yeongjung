@@ -13,10 +13,8 @@ export async function talking(prompt) {
 
     const completion = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
-        messages: [
-            {role: "user", content: `${prompt}`}
-        ],
+        messages: prompt
     });
 
-    return completion.data.choices[0].message.content.trim();
+    return completion.data;
 }

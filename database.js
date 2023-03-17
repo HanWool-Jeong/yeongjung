@@ -6,7 +6,8 @@ const db_config = {
     user: 'kakaotalk_bot',
     password: '2341',
     db: 'kakaotalk_bot_db',
-    table: 'chats'
+    table: 'chats',
+    gpt_table: 'gpt'
 };
 
 // db서버 안열리면 프로세스 죽이게 이건 예외처리 하지 말자
@@ -82,4 +83,67 @@ export async function get_frequency_rank(room, target_word) {
     `;
 
     return await query(query_statement);
+}
+
+export async function insert_gpt_msg(room, name, role, token, content) {
+    let query_statement = `
+        INSERT INTO ${db_config.gpt_table}
+        (room, name, role, token, content) VALUES
+        ('${room}', '${name}', '${role}', '${token}', '${content}');
+    `;
+
+    return query(query_statement);
+}
+
+export async function recall_prev_chats(room, max_token) {
+    let query_statement = `
+        SELECT
+            role, 
+            content
+        FROM (
+            SELECT
+                id,
+                role,
+                content,
+                SUM(token) OVER(ORDER BY id DESC) AS acc
+            FROM
+                gpt
+            WHERE
+                room = '${room}'
+            ORDER BY
+                id DESC
+        ) AS inline_view
+        WHERE
+            acc < ${max_token}
+        ORDER BY
+            id ASC;
+    `;
+
+    return query(query_statement);
+}
+
+export async function recall_prev_tokens(room, max_token) {
+    let query_statement = `
+        SELECT
+            SUM(token) AS prev_tokens
+        FROM (
+            SELECT
+                id,
+                role,
+                content,
+                token,
+                SUM(token) OVER(ORDER BY id DESC) AS acc
+            FROM
+                gpt
+            WHERE
+                room = '${room}'
+            ORDER BY
+                id DESC
+        ) AS inline_view
+        WHERE
+            acc < ${max_token}
+    `;
+
+    let result = await query(query_statement);
+    return result[0].prev_tokens;
 }

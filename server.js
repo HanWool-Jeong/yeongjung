@@ -3,10 +3,10 @@ import 'express-async-errors';
 import isNaturalNumber from 'is-natural-number';
 import { exec } from 'child_process';
 
-import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg } from './database.js';
+import { get_frequency, get_latest_msg, get_time_msg, get_frequency_rank, insert_msg, insert_gpt_msg, recall_prev_chats, recall_prev_tokens } from './database.js';
 import { SqlError } from 'mariadb';
 import { CommandError, ImageSaveFailedError } from './error.js';
-import { port, ip, project_dir } from './global_variables.js';
+import { port, ip, project_dir, recall_gpt_max_tokens } from './global_variables.js';
 import { talking } from './chatgpt.js';
 
 const app = express();
@@ -229,12 +229,30 @@ app.post('/leeyoungmin', function(req, res) {
 
 const command_talking = "영중아";
 app.post('/talking', async function(req, res) {
-    const { prompt } = req.body;
+    const re = /'/g;
+    const { room, name } = req.body;
+    let { prompt } = req.body;
+    
+    const chats = await recall_prev_chats(room, recall_gpt_max_tokens);
+    const prev_tokens = await recall_prev_tokens(room, recall_gpt_max_tokens);
+    chats.push({role: 'user', content: prompt});
+    //console.log(chats);
+    //console.log(prev_tokens);
 
-    let ai_reply = await talking(prompt);
-    ai_reply = ai_reply.trim();
+    const reply = await talking(chats);
+    let reply_content = reply.choices[0].message.content.trim();
+    //const reply_prompt_tokens = reply.usage.prompt_tokens;
+    const reply_completion_tokens = reply.usage.completion_tokens;
+    const reply_total_tokens = reply.usage.total_tokens;
+    //console.log(reply.usage);
 
-    res.send({ msg: ai_reply });
+    prompt = prompt.replace(re, '\\\'');
+    await insert_gpt_msg(room, name, 'user', reply_total_tokens - prev_tokens - reply_completion_tokens, prompt);
+
+    res.send({ msg: reply_content });
+
+    reply_content = reply_content.replace(re, '\\\'');
+    await insert_gpt_msg(room, name, 'assistant', reply_completion_tokens, reply_content);
 });
 
 // 예외처리
