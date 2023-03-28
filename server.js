@@ -44,7 +44,7 @@ app.post('/chat', async function(req, res, next) {
         }
 
         let img_name = `${Date.now()}.png`;
-        const kakaotalk_capture_cmd = `sleep 2 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
+        const kakaotalk_capture_cmd = `sleep 1.5 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
 
         // scort을 이용해 카톡방 통째로 캡쳐
         exec(kakaotalk_capture_cmd, async function(e) {
@@ -264,7 +264,7 @@ app.use(function (error, req, res, next) {
 
             // 넣을 문장이 너무 길면 캡쳐한다
             let img_name = `${Date.now()}.png`;
-            const kakaotalk_capture_cmd = `sleep 2 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
+            const kakaotalk_capture_cmd = `sleep 1.5 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
 
             exec(kakaotalk_capture_cmd, async function(e) {
                 if (e) {
@@ -277,7 +277,7 @@ app.use(function (error, req, res, next) {
             res.send({ msg: 'ok' });
         }
         else {
-            res.send({ msg: "데이터베이스 실패" });
+            //res.send({ msg: "데이터베이스 실패" });
             next(error);
         }
     }
@@ -286,11 +286,11 @@ app.use(function (error, req, res, next) {
     }
     else if (error instanceof ImageSaveFailedError) {
 		console.log(error.message);
-        res.send({ msg: "이미지 저장 실패" });
+        //res.send({ msg: "이미지 저장 실패" });
         next(error);
     }
     else {
-        res.send({ msg: "알 수 없는 오류"});
+        //res.send({ msg: "알 수 없는 오류"});
         next(error);
     }
 });
