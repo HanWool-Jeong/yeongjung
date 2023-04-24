@@ -26,7 +26,7 @@ const ph_emo_reply = /(이모티콘)/;
 //const kakaotalk_capture_cmd2 = `scrot --display :0 --class "kakaotalk.exe" -k --file ${project_dir}/img/${img_name}`
 //const kakaotalk_capture_cmd = `scrot --file ${project_dir}/img/${img_name} -u`;
 
-const whitelist = [ '정한울', '황현성' ];
+const whitelist = [ '정한울', '황현성', '영중이' ];
 
 app.use(express.json());
 app.use('/img', express.static(project_dir + '/img'));
