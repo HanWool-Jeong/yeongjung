@@ -36,31 +36,36 @@ app.post('/chat', async function(req, res, next) {
     //console.log(req.body);
     const { room, name, content } = req.body;
 
-    if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content)) {
-        if (room !== '배내골' && room !== '정한울') {
-            await insert_msg(room, name, content, 0); 
-            res.send({ msg: 'ok' });
-            return;
-        }
+    //if (content === '사진을 보냈습니다.' || pics_regex.test(content) || content === '이모티콘을 보냈습니다.' || sharp_search_regex.test(content) || pc_emo_reply.test(content) || ph_emo_reply.test(content)) {
+    //    if (room !== '배내골' && room !== '정한울') {
+    //        await insert_msg(room, name, content, 0); 
+    //        res.send({ msg: 'ok' });
+    //        return;
+    //    }
 
-        let img_name = `${Date.now()}.png`;
-        const kakaotalk_capture_cmd = `sleep 1.5 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
+    //    let img_name = `${Date.now()}.png`;
+    //    const kakaotalk_capture_cmd = `sleep 1 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
 
-        // scort을 이용해 카톡방 통째로 캡쳐
-        exec(kakaotalk_capture_cmd, async function(e) {
-            if (e) {
-                next(new ImageSaveFailedError(e.message));
-                return;
-            }
-            else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
-        });
-    }
-    else {
-        // 쿼리 고장나지 않게 작은 따옴표 제거
-        const re = /'/g;
-        const replaced = content.replace(re, '\\\'');
-        await insert_msg(room, name, replaced, 0); 
-    }
+    //    // scort을 이용해 카톡방 통째로 캡쳐
+    //    exec(kakaotalk_capture_cmd, async function(e) {
+    //        if (e) {
+    //            next(new ImageSaveFailedError(e.message));
+    //            return;
+    //        }
+    //        else await insert_msg(room, name, `http://${ip}:${port}/img/` + img_name, 1);
+    //    });
+    //}
+    //else {
+    //    // 쿼리 고장나지 않게 작은 따옴표 제거
+    //    const re = /'/g;
+    //    const replaced = content.replace(re, '\\\'');
+    //    await insert_msg(room, name, replaced, 0); 
+    //}
+
+	// 쿼리 고장나지 않게 작은 따옴표 제거
+	const re = /'/g;
+	const replaced = content.replace(re, '\\\'');
+	await insert_msg(room, name, replaced, 0); 
         
     res.send({ msg: 'ok' });
 });
@@ -215,18 +220,6 @@ app.post('/frequency_rank', async function(req, res, next) {
     res.send({ msg: response_msg });
 });
 
-const command_kimjisung_alcohol = "김지성주량";
-app.post('/kimjisung_alcohol', function (req, res) {
-    const m = "김지성의 주량은 0.5병\n" + "(단, 강애리 합석시 +2병)";
-    res.send({ msg: m });
-});
-
-const command_leeyoungmin = "이영민";
-app.post('/leeyoungmin', function(req, res) {
-    const m = "지예문정현나~↗";
-    res.send({ msg: m });
-});
-
 const command_talking = "영중아";
 app.post('/talking', async function(req, res) {
     const re = /'/g;
@@ -264,7 +257,7 @@ app.use(function (error, req, res, next) {
 
             // 넣을 문장이 너무 길면 캡쳐한다
             let img_name = `${Date.now()}.png`;
-            const kakaotalk_capture_cmd = `sleep 1.5 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
+            const kakaotalk_capture_cmd = `sleep 1 && scrot --display :0 --file ${project_dir}/img/${img_name} -u`;
 
             exec(kakaotalk_capture_cmd, async function(e) {
                 if (e) {
@@ -296,5 +289,5 @@ app.use(function (error, req, res, next) {
 });
 
 app.listen(port, '0.0.0.0', function() {
-    console.log(`${ip}:${port}`, '서버 가동중..');
+    console.log(`*:${port}`, '서버 가동중..');
 });
